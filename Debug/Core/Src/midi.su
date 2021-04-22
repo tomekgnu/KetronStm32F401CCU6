@@ -1,0 +1,13 @@
+midi.c:56:6:midiInit	4	static
+midi.c:60:17:getMidiEvent	4	static
+midi.c:64:26:getMidiStruct	16	static
+midi.c:70:6:readMidiMessage	24	static
+midi.c:142:6:sendMidiMessage	24	static
+midi.c:151:6:sendMidiBuffer	24	static
+midi.c:157:6:sendProgramChange	16	static
+midi.c:167:15:commandLen	16	static
+midi.c:201:6:metaFun	16	static
+midi.c:205:6:sysexFun	16	static
+midi.c:209:6:midiFun	16	static
+midi.c:225:6:midiFileVolume	16	static
+midi.c:229:6:midiPlayVolume	16	static
