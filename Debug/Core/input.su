@@ -1,0 +1,4 @@
+input.c:19:6:initControls	16	static
+input.c:31:6:joystickPressed	16	static
+input.c:58:6:encoderChanged	24	static
+input.c:80:13:ADC_SetActiveChannel	32	static

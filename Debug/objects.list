@@ -1,4 +1,6 @@
 "Core/Src/UartRingbuffer.o"
+"Core/Src/ee24.o"
+"Core/Src/input.o"
 "Core/Src/main.o"
 "Core/Src/midi.o"
 "Core/Src/stm32f4xx_hal_msp.o"

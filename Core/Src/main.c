@@ -22,10 +22,14 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stdio.h"
 #include "tm_stm32_hd44780.h"
 #include "tm_stm32f4_keypad.h"
 #include "UartRingbuffer.h"
 #include "midi.h"
+#include "input.h"
+#include "ee24Config.h"
+#include "ee24.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -54,7 +58,11 @@ UART_HandleTypeDef huart6;
 DMA_HandleTypeDef hdma_usart6_tx;
 
 /* USER CODE BEGIN PV */
-
+char lcdText[2][16];
+TM_KEYPAD_Button_t userKey;
+struct Joystick joystick;
+struct Encoder encoder;
+struct Settings settings;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -62,17 +70,17 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_I2C1_Init(void);
-static void MX_TIM1_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_TIM2_Init(void);
+static void MX_TIM1_Init(void);
 /* USER CODE BEGIN PFP */
 void ADC_SetActiveChannel(ADC_HandleTypeDef *hadc, uint32_t AdcChannel);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-TM_KEYPAD_Button_t key;
+
 /* USER CODE END 0 */
 
 /**
@@ -82,9 +90,15 @@ TM_KEYPAD_Button_t key;
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+
+	uint8_t ch;
+	uint8_t len = 0;
+	BOOL result;
+
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
 	DWT->CYCCNT = 0;
 	DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
+
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -93,10 +107,6 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-	uint32_t adc0 = 0, adc1 = 0;
-	int c;
-	unsigned char ch;
-	unsigned char len = 0;
 
   /* USER CODE END Init */
 
@@ -111,43 +121,56 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_I2C1_Init();
-  MX_TIM1_Init();
   MX_ADC1_Init();
   MX_USART6_UART_Init();
   MX_TIM2_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+	initControls(&joystick,&encoder);
 	Ringbuf_init();
 	TM_KEYPAD_Init();
 	TM_HD44780_Init(16, 2);
-	htim1.Instance->CNT = 32384;
+	HAL_TIM_PWM_Init(&htim2);
 	HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
 	HAL_TIM_Base_Start_IT(&htim2);
+	HAL_TIM_PWM_Start(&htim2,TIM_CHANNEL_1);
+	TIM2->ARR = 127;
+	TIM2->CCR1 = 40;
 	HAL_ADC_Start(&hadc1);
 
 	TM_HD44780_Clear();
 	TM_HD44780_Puts(0, 0, "Ketron");
 
-
-
+	if((result = ee24_isConnected()) ==FALSE){
+		TM_HD44780_Puts(0, 1, "EEPROM fail");
+	}
+	else{
+		settings.family_left = 1;
+		settings.instrument_left = 1;
+		settings.family_right = 2;
+		settings.instrument_right = 2;
+		settings.family_left = settings.family_right = settings.instrument_left = settings.instrument_right = 0;
+		if(result == TRUE)
+			result = ee24_read(_EEPROM_ADDRESS, (uint8_t *)(&settings), sizeof(struct Settings), 100);
+	}
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-
-	key = TM_KEYPAD_Read();
-	switch(key){
-	case TM_KEYPAD_Button_0:
-		TM_HD44780_Puts(0, 0, "0");
-		break;
-	case TM_KEYPAD_Button_1:
-		TM_HD44780_Puts(0, 0, "1");
-		break;
-	case TM_KEYPAD_Button_HASH:
-		break;
-	default:
-		break;
-	}
+		userKey = TM_KEYPAD_Read();
+		if(userKey != TM_KEYPAD_Button_NOPRESSED){
+			sprintf(lcdText[0],"%d",userKey);
+			TM_HD44780_Puts(0, 0, lcdText[0]);
+		}
+		if(joystickPressed(&joystick) == TRUE){
+			TM_HD44780_Puts(0, 0, "Joystick");
+		}
+		if(encoderChanged(&encoder) == TRUE){
+			TM_HD44780_Puts(0, 0, "Encoder");
+			sprintf(lcdText[1],"%d",encoder.position);
+			TM_HD44780_Puts(0, 1,lcdText[1]);
+		}
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -155,16 +178,6 @@ int main(void)
 			ch = (unsigned char) Uart_read();
 			if (readMidiMessage(ch, &len) == TRUE)
 				sendMidiMessage(len);
-		}
-		if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
-			adc0 = HAL_ADC_GetValue(&hadc1);
-			ADC_SetActiveChannel(&hadc1, ADC_CHANNEL_1);
-			HAL_ADC_Start(&hadc1);
-		}
-		if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK) {
-			adc1 = HAL_ADC_GetValue(&hadc1);
-			ADC_SetActiveChannel(&hadc1, ADC_CHANNEL_0);
-			HAL_ADC_Start(&hadc1);
 		}
 
 
@@ -320,24 +333,20 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim1.Init.Period = 65535;
+  htim1.Init.Period = 512;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  sConfig.EncoderMode = TIM_ENCODERMODE_TI1;
+  sConfig.EncoderMode = TIM_ENCODERMODE_TI12;
   sConfig.IC1Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC1Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC1Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC1Filter = 0;
+  sConfig.IC1Filter = 10;
   sConfig.IC2Polarity = TIM_ICPOLARITY_RISING;
   sConfig.IC2Selection = TIM_ICSELECTION_DIRECTTI;
   sConfig.IC2Prescaler = TIM_ICPSC_DIV1;
-  sConfig.IC2Filter = 15;
+  sConfig.IC2Filter = 10;
   if (HAL_TIM_Encoder_Init(&htim1, &sConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_OnePulse_Init(&htim1, TIM_OPMODE_SINGLE) != HAL_OK)
   {
     Error_Handler();
   }
@@ -367,6 +376,7 @@ static void MX_TIM2_Init(void)
 
   TIM_ClockConfigTypeDef sClockSourceConfig = {0};
   TIM_MasterConfigTypeDef sMasterConfig = {0};
+  TIM_OC_InitTypeDef sConfigOC = {0};
 
   /* USER CODE BEGIN TIM2_Init 1 */
 
@@ -386,15 +396,28 @@ static void MX_TIM2_Init(void)
   {
     Error_Handler();
   }
+  if (HAL_TIM_PWM_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
     Error_Handler();
   }
+  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.Pulse = 0;
+  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  if (HAL_TIM_PWM_ConfigChannel(&htim2, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN TIM2_Init 2 */
 
   /* USER CODE END TIM2_Init 2 */
+  HAL_TIM_MspPostInit(&htim2);
 
 }
 
@@ -513,15 +536,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void ADC_SetActiveChannel(ADC_HandleTypeDef *hadc, uint32_t AdcChannel) {
-	ADC_ChannelConfTypeDef sConfig = { 0 };
-	sConfig.Channel = AdcChannel;
-	sConfig.Rank = 1;
-	sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
-	if (HAL_ADC_ConfigChannel(hadc, &sConfig) != HAL_OK) {
-		Error_Handler();
-	}
-}
+
 /* USER CODE END 4 */
 
 /**

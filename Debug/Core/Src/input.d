@@ -1,4 +1,4 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
+Core/Src/input.o: ../Core/Src/input.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  ../Core/Inc/stm32f4xx_hal_conf.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
@@ -32,10 +32,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h \
  ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h \
- ../Core/Inc/tm_stm32_hd44780.h ../Core/Inc/main.h \
- ../Core/Inc/tm_stm32f4_keypad.h ../Core/Inc/UartRingbuffer.h \
- ../Core/Inc/midi.h ../Core/Inc/input.h ../Core/Inc/tm_stm32f4_keypad.h \
- ../Core/Inc/ee24Config.h ../Core/Inc/ee24.h
+ ../Core/Inc/input.h ../Core/Inc/main.h ../Core/Inc/tm_stm32f4_keypad.h \
+ ../Core/Inc/tm_stm32f4_keypad.h
 
 ../Core/Inc/main.h:
 
@@ -105,20 +103,10 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 
 ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h:
 
-../Core/Inc/tm_stm32_hd44780.h:
+../Core/Inc/input.h:
 
 ../Core/Inc/main.h:
 
 ../Core/Inc/tm_stm32f4_keypad.h:
 
-../Core/Inc/UartRingbuffer.h:
-
-../Core/Inc/midi.h:
-
-../Core/Inc/input.h:
-
 ../Core/Inc/tm_stm32f4_keypad.h:
-
-../Core/Inc/ee24Config.h:
-
-../Core/Inc/ee24.h:

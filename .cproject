@@ -141,6 +141,12 @@
                         					
                     </folderInfo>
                     					
+                    <fileInfo id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1711792306.230699269" name="ee24.c" rcbsApplicability="disable" resourcePath="Core/Src/ee24.c" toolsToInvoke="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.2006303299.849188992">
+                        						
+                        <tool id="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.2006303299.849188992" name="MCU GCC Compiler" superClass="com.st.stm32cube.ide.mcu.gnu.managedbuild.tool.c.compiler.2006303299"/>
+                        					
+                    </fileInfo>
+                    					
                     <sourceEntries>
                         						
                         <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="Core"/>

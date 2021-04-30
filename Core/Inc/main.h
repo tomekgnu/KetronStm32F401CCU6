@@ -50,6 +50,8 @@ extern "C" {
 
 /* USER CODE END EM */
 
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
+
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
 
@@ -86,12 +88,10 @@ void Error_Handler(void);
 #define KEYPAD_ROW_2_GPIO_Port GPIOB
 #define ENC_SW_Pin GPIO_PIN_15
 #define ENC_SW_GPIO_Port GPIOB
-#define ENC_CLK_Pin GPIO_PIN_8
-#define ENC_CLK_GPIO_Port GPIOA
-#define ENC_DT_Pin GPIO_PIN_9
-#define ENC_DT_GPIO_Port GPIOA
 #define KEYPAD_ROW_1_Pin GPIO_PIN_10
 #define KEYPAD_ROW_1_GPIO_Port GPIOA
+#define PWM_Pin GPIO_PIN_15
+#define PWM_GPIO_Port GPIOA
 #define KEYPAD_COLUMN_1_Pin GPIO_PIN_4
 #define KEYPAD_COLUMN_1_GPIO_Port GPIOB
 #define KEYPAD_COLUMN_2_Pin GPIO_PIN_5
@@ -102,6 +102,12 @@ void Error_Handler(void);
 #define KEYPAD_COLUMN_4_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
 typedef enum{FALSE,TRUE} BOOL;
+struct Settings {
+	uint8_t family_left;
+	uint8_t instrument_left;
+	uint8_t family_right;
+	uint8_t instrument_right;
+};
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
