@@ -91,7 +91,7 @@ struct midi_time_event{
 	
 unsigned char * getMidiEvent();
 struct midi_time_event * getMidiStruct(unsigned long dt);
-BOOL readMidiMessage(unsigned char c,unsigned char *len);
+BOOL readMidiMessage(unsigned char c,unsigned char *len,unsigned char *typ);
 void sendMidiMessage(unsigned char num);
 void sendMidiBuffer(unsigned char *buf,unsigned char num);
 void sendProgramChange(unsigned char bank,unsigned char program);

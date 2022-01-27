@@ -91,8 +91,9 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 
-	uint8_t ch;
-	uint8_t len = 0;
+	uint8_t uartRead;
+	uint8_t msgLength = 0;
+	uint8_t msgType = 0;
 	BOOL result;
 
 	CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
@@ -175,9 +176,14 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 		if (IsDataAvailable() > 0) {
-			ch = (unsigned char) Uart_read();
-			if (readMidiMessage(ch, &len) == TRUE)
-				sendMidiMessage(len);
+			uartRead = (unsigned char) Uart_read();
+			if (readMidiMessage(uartRead, &msgLength,&msgType) == TRUE){
+				switch(msgType){
+
+
+				}
+				sendMidiMessage(msgLength);
+			}
 		}
 
 

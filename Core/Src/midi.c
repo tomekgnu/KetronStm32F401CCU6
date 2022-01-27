@@ -67,7 +67,7 @@ struct midi_time_event * getMidiStruct(unsigned long dt){
 	return &work_event;
 }
 
-BOOL readMidiMessage(unsigned char byte,unsigned char *len){
+BOOL readMidiMessage(unsigned char byte,unsigned char *len,unsigned char *type){
 	
    unsigned char tmp;
 
@@ -97,6 +97,7 @@ BOOL readMidiMessage(unsigned char byte,unsigned char *len){
             	 *len = 1;
             	 work_event.event.data[0] = byte;
             	 noteEvent = FALSE;
+            	 *type = byte;
                  return TRUE;
             } else if(tmp == 0){
             	if(noteEvent == TRUE) {
